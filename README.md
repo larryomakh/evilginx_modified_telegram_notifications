@@ -250,6 +250,41 @@ If you want to confirm that your domain/subdomain correctly points to your serve
 
 ---
 
+## 🏃 Keeping Evilginx Running After Closing Terminal
+
+To keep Evilginx running even after you disconnect your SSH session or close your terminal, use one of these methods:
+
+### 1. Using `nohup` (Simple & Recommended)
+```sh
+nohup ./evilginx2 > evilginx2.log 2>&1 &
+```
+- Evilginx will run in the background.
+- Output is saved to `evilginx2.log`.
+- You can safely close your SSH session or terminal.
+
+### 2. Using `screen` or `tmux` (Interactive)
+- Start a session:
+  ```sh
+  screen -S evilginx
+  # or
+  tmux new -s evilginx
+  ```
+- Run Evilginx:
+  ```sh
+  ./evilginx2
+  ```
+- Detach (`Ctrl+A D` for screen, `Ctrl+B D` for tmux). Reattach with:
+  ```sh
+  screen -r evilginx
+  # or
+  tmux attach -t evilginx
+  ```
+
+### 3. Using a systemd Service (Advanced)
+- For production, you can create a systemd service to manage Evilginx as a background service.
+
+---
+
 ### Example DNS Record
 
 | Type | Name   | Content           | Proxy Status |
