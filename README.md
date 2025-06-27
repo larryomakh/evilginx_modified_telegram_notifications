@@ -243,7 +243,7 @@ This has been modified to only send valid sessions, no empty logs, and will incl
 
 ## Disclaimer
 
-This work is merely a demonstration of what adept attackers can do and #REDTEAM excecises. It is the defender's responsibility to take such attacks into consideration and find ways to protect their users against this type of phishing attacks. Evilginx should be used only in legitimate penetration testing assignments with written permission from to-be-phished parties.
-I am not responsible for any direct/indirect misuse of this knowledge. 
-
+This tool is provided strictly for educational purposes and authorized security testing (Red Team exercises). It is intended to help defenders understand and mitigate advanced phishing techniques. Evilginx must only be used in legitimate penetration testing engagements, with explicit written consent from all parties involved.
+The author does not endorse or condone any unauthorized or illegal use of this tool. Any misuse, including unauthorized phishing or malicious activity, is strictly prohibited and is the sole responsibility of the user.
+By using this software, you acknowledge that you are solely liable for any consequences arising from its use and that you are responsible for complying with all applicable laws and regulations.
 ---
