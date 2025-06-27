@@ -252,36 +252,41 @@ If you want to confirm that your domain/subdomain correctly points to your serve
 
 ## 🏃 Keeping Evilginx Running After Closing Terminal
 
-To keep Evilginx running even after you disconnect your SSH session or close your terminal, use one of these methods:
+> **Important:** Evilginx requires an interactive shell. Methods like `nohup` or backgrounding with `&` will NOT work reliably—Evilginx will exit immediately because it cannot access a terminal for its interactive REPL.
 
-### 1. Using `nohup` (Simple & Recommended)
-```sh
-nohup ./evilginx2 > evilginx2.log 2>&1 &
-```
-- Evilginx will run in the background.
-- Output is saved to `evilginx2.log`.
-- You can safely close your SSH session or terminal.
-
-### 2. Using `screen` or `tmux` (Interactive)
-- Start a session:
+### ✅ Recommended: Using `screen` or `tmux`
+- Start a persistent terminal session:
   ```sh
   screen -S evilginx
   # or
   tmux new -s evilginx
   ```
-- Run Evilginx:
+- Run Evilginx inside the session:
   ```sh
   ./evilginx2
   ```
-- Detach (`Ctrl+A D` for screen, `Ctrl+B D` for tmux). Reattach with:
+- Detach from the session (leave Evilginx running):
+  - For `screen`: Press `Ctrl+A` then `D`
+  - For `tmux`: Press `Ctrl+B` then `D`
+- You can safely close your SSH session or terminal.
+- To reattach later:
   ```sh
   screen -r evilginx
   # or
   tmux attach -t evilginx
   ```
+- If you have multiple `screen` sessions, list them with `screen -ls` and reattach with `screen -r [pid].evilginx`.
+- If a session is still attached elsewhere, force detach and reattach with:
+  ```sh
+  screen -d -r [pid].evilginx
+  ```
+
+### ⚠️ Not Recommended: `nohup` or `&`
+- Evilginx will exit immediately if run with `nohup` or in the background because it needs a TTY.
+- Always use `screen` or `tmux` for long-running Evilginx sessions.
 
 ### 3. Using a systemd Service (Advanced)
-- For production, you can create a systemd service to manage Evilginx as a background service.
+- For production, you can create a systemd service to manage Evilginx as a background service, but this requires extra configuration to provide a pseudo-terminal.
 
 ---
 
