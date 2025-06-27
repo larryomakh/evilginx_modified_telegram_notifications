@@ -116,6 +116,113 @@ To block `8.8.8.8` and the entire `192.168.1.0/24` subnet:
 To unblock, simply remove those lines and restart Evilginx.
 
 ---
+
+## ☁️ Evilginx + Cloudflare Integration Guide
+
+### 1. Create a Lure in Evilginx
+
+**A. Start Evilginx**
+```sh
+./evilginx2
+```
+
+**B. List Available Phishlets**
+```
+> phishlets
+```
+Pick your target (e.g., `google`, `facebook`, etc.).
+
+**C. Configure the Phishlet Domain**
+Suppose you want to phish `google.com` using `login.yourdomain.com`:
+```
+> phishlets hostname google login.yourdomain.com
+```
+Repeat for all required hostnames as per the phishlet’s instructions.
+
+**D. Enable the Phishlet**
+```
+> phishlets enable google
+```
+
+**E. Create a Lure**
+```
+> lures create google
+```
+Copy the generated lure URL.
+
+---
+
+### 2. Set Up Your Domain with Cloudflare
+
+**A. Register a Domain**
+- Buy a domain from a registrar (e.g., Namecheap, GoDaddy).
+
+**B. Add Domain to Cloudflare**
+- Go to [Cloudflare](https://dash.cloudflare.com/), create an account, and add your domain.
+- Cloudflare will provide you with new nameservers.
+- Update your domain registrar’s nameservers to point to Cloudflare’s.
+
+**C. Set Up DNS Records**
+- In Cloudflare DNS settings, add an `A` record for each hostname used by your lure.
+    - **Name:** `login` (or whatever subdomain your phishlet/lure uses)
+    - **Type:** `A`
+    - **Content:** Your Evilginx server’s public IP address
+    - **Proxy status:** **DNS only** (the orange cloud must be **grey**! Evilginx will not work behind Cloudflare’s proxy)
+
+    Repeat for all subdomains required by the phishlet.
+
+---
+
+### 3. SSL/TLS Settings in Cloudflare
+
+- Go to the SSL/TLS tab in Cloudflare.
+- Set SSL/TLS mode to **Full** or **Full (Strict)**.
+- **DO NOT** use “Flexible” mode.
+- For best results, use your own Let’s Encrypt certificates or let Evilginx handle automatic certificate generation.
+
+---
+
+### 4. Firewall and Security Settings
+
+- Disable Cloudflare’s security features (WAF, Bot Fight Mode, etc.) for your phishing subdomains.
+- Go to “Page Rules” or “Rules” and create rules to turn off security features for your lure subdomains.
+- Ensure ports 80 and 443 are open on your Evilginx server.
+
+---
+
+### 5. Test Your Setup
+
+- Wait for DNS propagation (can take a few minutes).
+- Visit your lure URL (e.g., `https://login.yourdomain.com`).
+- Evilginx should serve the phishing page with a valid certificate.
+
+---
+
+### 6. Troubleshooting
+
+- If you see Cloudflare’s error or “SSL handshake failed,” check:
+    - The DNS record is set to “DNS only” (grey cloud).
+    - Your server’s firewall allows inbound traffic on ports 80 and 443.
+    - Evilginx is running and has valid certificates.
+- Use `dig` or `nslookup` to confirm your subdomain resolves to your server’s IP.
+
+---
+
+### 7. Security Notes
+
+- Never use Cloudflare’s proxy (orange cloud) for Evilginx phishing subdomains.
+- Only use Cloudflare for DNS management.
+- Using the proxy will break Evilginx’s MITM functionality and may expose you to detection.
+
+---
+
+### Example DNS Record
+
+| Type | Name   | Content           | Proxy Status |
+|------|--------|-------------------|--------------|
+|  A   | login  | 1.2.3.4 (your IP) | DNS only     |
+
+---
 Big Thanks to [kgretzky](https://github.com/kgretzky/) for Creating such great tool  
 ---
 
