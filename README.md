@@ -38,6 +38,30 @@ go build -o evilginx2 .
 ./evilginx2
 ```
 
+---
+
+### 🛠️ Go Build Troubleshooting (Ubuntu)
+If you see errors like:
+- `cannot load io/fs: malformed module path "io/fs": missing dot in first path element`
+- `inconsistent vendoring` or messages about vendor/modules.txt
+
+**You are likely using an old Go version, or the Go modules are out of sync.**
+
+**Fix:**
+1. **Ensure you are using Go 1.22 or newer:**
+   ```sh
+   go version  # Should show go1.22.x or newer
+   ```
+2. **If you see vendoring errors after cloning or moving the repo:**
+   ```sh
+   go mod tidy
+   go mod vendor
+   go build -o evilginx2 .
+   ./evilginx2
+   ```
+
+This will resolve version and vendoring issues on fresh installations or after moving the project between machines.
+
 **4. Running in the background:**
 ```sh
 nohup ./evilginx2 > evilginx2.log 2>&1 &
