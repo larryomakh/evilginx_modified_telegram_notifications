@@ -9,6 +9,29 @@
 
 ---
 
+## 📄 Example: /root/.evilginx/config.json
+
+Before starting Evilginx, you must create a config file with your Telegram notification credentials. Open the file with:
+```sh
+nano /root/.evilginx/config.json
+```
+Paste and edit the following template:
+```json
+{
+  "chatid": "YOUR_TELEGRAM_CHAT_ID",
+  "teletoken": "YOUR_TELEGRAM_BOT_TOKEN"
+}
+```
+- `chatid`: Your Telegram chat ID (where notifications will be sent).
+- `teletoken`: Your Telegram bot token (from BotFather).
+
+Save and exit. Now you can launch Evilginx:
+```sh
+./evilginx2
+```
+
+---
+
 ## 🖥️ Deploying on Ubuntu Server
 
 **1. Clone the repository:**
