@@ -59,6 +59,63 @@ rm -rf /root/.evilginx/*
 - Evilginx will attempt to generate/request new certificates.
 
 ---
+
+## 🚫 Managing the Blacklist (Block/Unblock IPs)
+
+**Blacklist file location:** By default, Evilginx loads blacklisted IPs and CIDR masks from a file (often `/root/.evilginx/blacklist.txt` or similar; check logs or config for the exact path).
+
+### ➕ Adding to the Blacklist
+
+**Method 1: Manually edit the blacklist file**
+1. Open the blacklist file:
+   ```sh
+   nano /root/.evilginx/blacklist.txt
+   ```
+2. Add each IP or CIDR (subnet) on a new line. Examples:
+   ```
+   123.123.123.123
+   10.0.0.0/8
+   ```
+3. Save and exit.
+4. Restart Evilginx for changes to take effect:
+   ```sh
+   pkill evilginx2
+   ./evilginx2
+   ```
+
+**Method 2: Programmatically (from Go code)**
+- Evilginx uses the `AddIP` method in `core/blacklist.go` to add an IP:
+  ```go
+  err := blacklist.AddIP("123.123.123.123")
+  ```
+
+### ➖ Removing from the Blacklist
+
+1. Open the blacklist file:
+   ```sh
+   nano /root/.evilginx/blacklist.txt
+   ```
+2. Delete the line(s) for IPs or subnets you want to remove.
+3. Save and exit.
+4. Restart Evilginx:
+   ```sh
+   pkill evilginx2
+   ./evilginx2
+   ```
+
+### 🔎 Where is the Blacklist File?
+- The path is usually displayed in Evilginx logs at startup (look for `loading blacklist from: ...`).
+- Common locations: `/root/.evilginx/blacklist.txt`, `blacklist.txt` in the Evilginx directory, or as configured in your setup.
+
+### 📝 Example
+To block `8.8.8.8` and the entire `192.168.1.0/24` subnet:
+```
+8.8.8.8
+192.168.1.0/24
+```
+To unblock, simply remove those lines and restart Evilginx.
+
+---
 Big Thanks to [kgretzky](https://github.com/kgretzky/) for Creating such great tool  
 ---
 
