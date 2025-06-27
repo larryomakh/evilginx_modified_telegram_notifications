@@ -206,6 +206,40 @@ Copy the generated lure URL.
     - Evilginx is running and has valid certificates.
 - Use `dig` or `nslookup` to confirm your subdomain resolves to your server’s IP.
 
+#### 🔍 Testing DNS and HTTP Connectivity
+
+If you want to confirm that your domain/subdomain correctly points to your server and that port 80 is open:
+
+1. **Check what is using port 80:**
+   ```sh
+   sudo lsof -i :80
+   ```
+   If nginx or another web server is running, you may need to stop it:
+   ```sh
+   sudo systemctl stop nginx
+   ```
+
+2. **Run a simple Python HTTP server:**
+   ```sh
+   python3 -m http.server 80
+   ```
+
+3. **From another device, visit:**
+   - `http://yourdomain.com` or your phishing subdomain.
+   - If you see a directory listing or a 404 error in your Python server logs, your DNS and HTTP are working.
+
+4. **When done, stop the test server and restart Evilginx (or nginx):**
+   ```sh
+   pkill -f http.server
+   ./evilginx2
+   # or, to restart nginx
+   sudo systemctl start nginx
+   ```
+
+**Interpreting Results:**
+- If you see external requests in the Python server logs, your DNS is set up correctly and port 80 is open.
+- 404 errors are normal if the requested files don’t exist; the important thing is that requests reach your server.
+
 ---
 
 ### 7. Security Notes
